@@ -1,0 +1,77 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1347\cocoasubrtf570
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww12540\viewh12660\viewkind1
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 (1)\
+Geometrix\
+Ankit Jain, Denise Li, Eli Hickox, Melissa Crawford, Stephen Pinkerton\
+\
+(2)\
+Definitions\
+Safe landing site: a location not exceeding the thresholds for slope nor roughness\
+Threshold for extreme slope: ground angle to vertical < 10 degrees\
+Threshold for roughness: highest point of surface under lander < 0.39 m + height of the plane defined by the lander\'92s feet\
+False Positive: Pixel incorrectly identified as safe\
+False Negative: Pixel incorrectly identified as unsafe\
+\
+(3)\
+Algorithm Outline\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 1. Initialize (1000,1000) numpy array 
+\b solution
+\b0  with zeros.\
+2. Set 
+\b solution
+\b0 [20:979, 20:979] to 255 as points that may be allowable. Edges are not allowed.\
+3. Blocks out points of extreme slope.\
+4. Blocks out points of roughness.\
+5. Output solution to solutions/<datasetname>.pgm\
+\
+(4)\
+Slope: Pseudocode\
+\
+(5)\
+Roughness: Pseudocode\
+\
+(6)\
+Performance Summary\
+Slope: O(N^2)\
+Roughness: O(N^2 + X)\
+Total computation complexity: O(N^2 + X)\
+Memory Usage: (500^2 + 1000^2)*32 bits = 5 MB\
+\
+(7)\
+Performance on Training Data Set 1 (Maps and error rates)\
+\
+(8)\
+Performance on Training Data Set 2\
+\
+(9)\
+Performance on Training Data Set 3\
+\
+(10)\
+Performance on Training Data Set 4\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+(11)\
+Choosing parameters\
+Grid search over range of possible values for constants a and r that minimize overall error rate on training data\
+\
+(12)\
+References:\
+\
+On parameter optimization and grid search:\
+\
+Bergstra, J., Bardenet, R., Bengio, Y., & Kegl, B. (2011). 
+\i Algorithms for Hyper-Parameter Optimization
+\i0 . Retrieved from http://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf\
+\
+Hsu, C. W., Chang, C. C., & Lin, C. J. (2010, April 15). 
+\i A Practical Guide to Support Vector Classification
+\i0 . Retrieved from http://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf\
+\
+NumPy data types:\
+http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html\
+}

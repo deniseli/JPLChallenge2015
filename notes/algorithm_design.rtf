@@ -1,0 +1,586 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1347\cocoasubrtf570
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red242\green242\blue242;}
+\margl1440\margr1440\vieww12500\viewh12660\viewkind1
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b\fs28 \cf0 Block out points of roughness:
+\b0\fs24 \
+\
+
+\b r
+\b0  = roughness bound that maximizes accuracy on training data\
+
+\b d
+\b0  = distance (rover width) in pixels that maximizes accuracy on training data\
+For 
+\b i
+\b0  in 
+\b 1
+\b0 \'85
+\b 499
+\b0 :\
+	For 
+\b j
+\b0  in 
+\b 1
+\b0 \'85
+\b 499
+\b0 :\
+		// Bound the points we check (in vertical and horizontal directions)\
+		
+\b top
+\b0  := row position a maximum distance 
+\b d
+\b0  above 
+\b i
+\b0  \
+		
+\b bot
+\b0  := row position a maximum distance 
+\b d
+\b0  below 
+\b i
+\b0 \
+		
+\b left
+\b0  := column position a maximum distance 
+\b d
+\b0  left of 
+\b j
+\b0 \
+		
+\b right
+\b0  := column position a maximum distance 
+\b d
+\b0  right of 
+\b j
+\b0 \
+		// Calculate number of rover positions that exist around point (i, j)\
+		
+\b ir
+\b0  := max(
+\b 1
+\b0 , min(
+\b i
+\b0  - 
+\b top
+\b0 , 
+\b bot
+\b0  - 
+\b i
+\b0 ))\
+		
+\b jr
+\b0  := max(
+\b 1
+\b0 , min(
+\b j
+\b0  - 
+\b left
+\b0 , 
+\b right
+\b0  - 
+\b j
+\b0 ))\
+		// Initialize multiplier arrays for calculating height at point x somewhere\
+		// between two other points\
+		
+\b im
+\b0  := [
+\b 1.
+\b0 ,\'85,
+\b ir
+\b0 ] / (
+\b ir
+\b0  + 
+\b 1
+\b0 )\
+		
+\b jm
+\b0  := [
+\b 1.
+\b0 ,\'85,
+\b jr
+\b0 ] / (
+\b jr
+\b0  + 
+\b 1
+\b0 )\
+		// Calculate expected height at point (i, j) for each rover position in the\
+		// vertical and horizontal ranges around (i, j)\
+		// Both * and + here are element-wise operations\
+		
+\b iheights
+\b0  := 
+\b im
+\b0  * 
+\b DEM
+\b0 [
+\b top
+\b0 :
+\b top
+\b0 +
+\b ir
+\b0 , 
+\b j
+\b0 ] + reverse(
+\b im
+\b0 ) * 
+\b DEM
+\b0 [
+\b top
+\b0 +
+\b d
+\b0 :
+\b top
+\b0 +
+\b d
+\b0 +
+\b ir
+\b0 ]\
+		
+\b jheights
+\b0  := 
+\b jm
+\b0  * 
+\b DEM
+\b0 [
+\b i
+\b0 , 
+\b left
+\b0 :
+\b left
+\b0 +
+\b jr
+\b0 ] + reverse(
+\b jm
+\b0 ) * 
+\b DEM
+\b0 [
+\b left
+\b0 +
+\b d
+\b0 :
+\b left
+\b0 +
+\b d
+\b0 +
+\b jr
+\b0 ]\
+		// If elevation at point (i, j) is more than r higher than any height in iheights\
+		// or jheights, block out the circle of points around (i, j)\
+		if 
+\b DEM
+\b0 [
+\b i
+\b0 , 
+\b j
+\b0 ] - 
+\b r
+\b0  > min(
+\b iheights
+\b0 ) or 
+\b DEM
+\b0 [
+\b i
+\b0 , 
+\b j
+\b0 ] - 
+\b r
+\b0  > min(
+\b jheights
+\b0 ):\
+			For 
+\b p
+\b0  in getCircleIndices((
+\b i
+\b0 *
+\b 2
+\b0 , 
+\b j
+\b0 *
+\b 2
+\b0 ), 
+\b radius
+\b0 , 
+\b resolution
+\b0 ):\
+				
+\b solution
+\b0 [
+\b p
+\b0 ] = 
+\b 0
+\b0 \
+\
+function getCircleIndices(
+\b c
+\b0 , 
+\b r
+\b0 , 
+\b res
+\b0 ):\
+	
+\b points
+\b0  := new empty list\
+	
+\b r_new
+\b0  := math.ceil(
+\b r
+\b0 /
+\b res
+\b0 ) // Convert radius in meters to radius in pixels\
+	For 
+\b i
+\b0  in 
+\b c[0]
+\b0 -
+\b r_new
+\b0 \'85
+\b c[0]
+\b0 +
+\b r_new
+\b0 :\
+		For 
+\b j
+\b0  in 
+\b c[1]
+\b0 -
+\b r_new
+\b0 \'85
+\b c[1]
+\b0 +
+\b r_new
+\b0 :\
+			// Optimization here: checks if solution at (i, j) is already 0 so we do\
+			// not spend time calculating euclidean distance unnecessarily\
+			if 
+\b solution
+\b0 [
+\b i
+\b0 , 
+\b j
+\b0 ] == 
+\b 255
+\b0  and dist((
+\b i
+\b0 , 
+\b j
+\b0 ), 
+\b c
+\b0 ) <= 
+\b r
+\b0 /
+\b res
+\b0 :\
+				
+\b points
+\b0 .append((
+\b i
+\b0 , 
+\b j
+\b0 ))\
+\
+
+\b Optimizations:
+\b0 \
+	We define the naive solution to be iterating over each point in the DEM, calling getCircleIndices with c = the current point, and checking if any of those points are taller than any of the planes formed by 3 of the border points. Assuming this checks a constant number of angles 
+\b A
+\b0  to find the border points, getCircleIndices returns 
+\b C
+\b0  points, and the DEM is size 
+\b NxN
+\b0 , the naive solution would run in time O(ACN^2), which simplifies to O(N^2).\
+	Our runtime in practice is much lower because we check if each point is the point of roughness, rather than if each possible circle contains a patch of roughness. We only call getCircleIndices if a point is rough, so the runtime is dependent on 
+\b X
+\b0 , the number of points of that are raised/rough. We know X < N^2 and A is a large integer, so O(N^2 + CX) < O(ACN^2). However, because A and C are constants, our worse case runtime simplified is O(N^2 + X).\
+\
+\
+
+\b\fs28 Block out points of extreme slope: 
+\b0\fs24 \
+\
+
+\b a
+\b0  = angle/slope bound that maximizes accuracy on training data\
+
+\b r
+\b0  = distance (rover width) in pixels that maximizes accuracy on training data\
+Parallelized outer loop using Pool.apply_async() from multiprocessing module:\
+For 
+\b i
+\b0  in 
+\b 10
+\b0 \'85
+\b 490
+\b0 :\
+	For 
+\b j
+\b0  in 
+\b 10
+\b0 \'85
+\b 490
+\b0 :\
+		// Skip calculations if height at point (i, j) is already at the minimum\
+		if 
+\b DEM
+\b0 [
+\b i
+\b0 , 
+\b j
+\b0 ] == 0:\
+			continue\
+		
+\b points
+\b0  := list of 
+\b 16
+\b0  points spaced evenly in a circle of radius 
+\b r
+\b0  around\
+			point (
+\b i
+\b0 , 
+\b j
+\b0 )\
+		For 
+\b p
+\b0  in 
+\b 0
+\b0 \'85
+\b 16
+\b0 :\
+			// Build plane using 3 points spaced 90 degrees apart\
+			
+\b p1
+\b0  := 
+\b points
+\b0 [
+\b p
+\b0 ]\
+			
+\b p2
+\b0  := 
+\b points
+\b0 [(
+\b p
+\b0  + 
+\b 4
+\b0 ) % 
+\b 16
+\b0 ] // 90 degrees from p1\
+			
+\b p3
+\b0  := 
+\b points
+\b0 [(
+\b p
+\b0  + 
+\b 8
+\b0 ) % 
+\b 16
+\b0 ] // 180 degrees from p1\
+			
+\b vecA
+\b0  := vector from 
+\b p2
+\b0  to 
+\b p1
+\b0 \
+			
+\b vecB
+\b0  := vector from 
+\b p2
+\b0  to 
+\b p3
+\b0 \
+			
+\b n
+\b0  := crossproduct(
+\b vecA
+\b0 , 
+\b vecB
+\b0 )\
+			
+\b angle
+\b0  := arccos(dotproduct(
+\b n
+\b0 , (
+\b 0
+\b0 , 
+\b 0
+\b0 , 
+\b -1
+\b0 )) / norm(
+\b n
+\b0 ))\
+			// If the angle between the plane\'92s normal and the vertical > a,\
+			// block out the point\
+			// We don\'92t need to check any more planes if this one is too sloped\
+			if 
+\b angle
+\b0  > 
+\b a
+\b0 :\
+				
+\b solution
+\b0 [
+\b 2
+\b0 *
+\b i
+\b0 , 
+\b 2
+\b0 *
+\b j
+\b0 ] := 
+\b 0\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b0 \cf0 				
+\b solution
+\b0 [
+\b 2
+\b0 *
+\b i
+\b0  + 
+\b 1
+\b0 , 
+\b 2
+\b0 *
+\b j
+\b0 ] := 
+\b 0\
+
+\b0 				
+\b solution
+\b0 [
+\b 2
+\b0 *
+\b i
+\b0 , 
+\b 2
+\b0 *
+\b j
+\b0  + 
+\b 1
+\b0 ] := 
+\b 0\
+
+\b0 				
+\b solution
+\b0 [
+\b 2
+\b0 *
+\b i
+\b0  + 
+\b 1
+\b0 , 
+\b 2
+\b0 *
+\b j
+\b0  + 
+\b 1
+\b0 ] := 
+\b 0
+\b0 \
+				break\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b \cf0 Optimizations: 
+\b0 \
+	The naive solution would assume we need to check every possible set of 3 landing points for the footpads of the rover, which would be at least the the circumference of the rover divided by average length in meters of a pixel in the DEM. Realistically, it would probably need to check more points to account for all possible positions where the tangent to the circle is not vertical or horizontal. This means checking at least 54 points. Our solution only checks 16 points, so we cut out at least 70% of the runtime that way.\
+	We also chose to calculate the slopes using the plane normals, taking advantage of (and also optimizing for) the fact that the rover has 4 discreet footpads, rather than calculating the gradient of the plane or calculating the gradient at the central point. Calculating the gradient of any plane is slower than finding its normal, so avoiding that in general is preferable. Further, calculating gradient at the central point would be inaccurate due to the nature of the problem - the rover is landing on footpads around its edges, not a single leg in the middle.\
+	Assuming the DEM is size 
+\b NxN
+\b0 , the runtime of our solution is O(N^2).\
+\
+\
+
+\b\fs28 Algorithm Outline: 
+\b0\fs24 \
+\
+1. Initialize (1000,1000) numpy array 
+\b solution
+\b0  with zeros.\
+2. Set 
+\b solution
+\b0 [20:979, 20:979] to 255 as points that may be allowable. Edges are not allowed.\
+3. Blocks out points of extreme slope.\
+4. Blocks out points of roughness.\
+5. Output solution to solutions/<datasetname>.pgm\
+\
+False positive: Our algorithm marked a pixel as 255, should be 0\
+False negative: Our algorithm marked a pixel as 0, should be 255\
+\
+Training data 1:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 Time to find points of extreme slope: 9.80587601662\
+Searching for points of roughness...\
+Time to find points of roughness: 31.5083520412\
+False positives: 5016 = 2.5841816758 %\
+False negatives: 5756 = 0.71423608009 %\
+Total error: 10772 = 1.0772 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 not skipping dem = 0\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 False positives: 3934 = 2.02674854717 %\
+False negatives: 9213 = 1.14319961881 %\
+Total error: 13147 = 1.3147 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+Training data 2:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 Time to find points of extreme slope: 35.0501070023\
+Searching for points of roughness...\
+Time to find points of roughness: 27.5057649612\
+False positives: 12066 = 1.54332594031 %\
+False negatives: 21732 = 9.96049169959 %\
+Total error: 33798 = 3.3798 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 without dem=0\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 False positives: 12066 = 1.54332594031 %\
+False negatives: 21732 = 9.96049169959 %\
+Total error: 33798 = 3.3798 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+Training data 3:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 Time to find points of extreme slope: 24.6774759293\
+Searching for points of roughness...\
+Time to find points of roughness: 26.4193899632\
+False positives: 10286 = 1.17467292793 %\
+False negatives: 21310 = 17.1368373649 %\
+Total error: 31596 = 3.1596 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 without dem=0\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 False positives: 10286 = 1.17467292793 %\
+False negatives: 21310 = 17.1368373649 %\
+Total error: 31596 = 3.1596 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+Training data 4:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf2 \cb0 \CocoaLigature0 Time to find points of extreme slope: 21.1331930161\
+Searching for points of roughness...\
+Time to find points of roughness: 36.3402440548\
+False positives: 9149 = 1.00149419562 %\
+False negatives: 22395 = 25.9006534436 %\
+Total error: 31544 = 3.1544 %
+\f0\fs24 \cf0 \cb1 \CocoaLigature1 \
+without dem=0}
